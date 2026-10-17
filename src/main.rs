@@ -1,4 +1,4 @@
-mod factor;
+mod factors;
 mod analysis;
 
 fn main() {
