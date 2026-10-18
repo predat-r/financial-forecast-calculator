@@ -1,4 +1,6 @@
-use financial_factor_calculator::analysis::{figures_for_year, top_companies_by_factor};
+use financial_factor_calculator::analysis::{
+    compare_companies, figures_for_year, top_companies_by_factor,
+};
 use financial_factor_calculator::factors::{
     debt_to_equity, operating_margin, roe, roic, yoy_revenue_growth,
 };
@@ -39,22 +41,12 @@ fn main() {
         col("nopat"),
     ]);
     let filtered_lf = figures_for_year(lf, 2023);
-    let ranked_lf = top_companies_by_factor(filtered_lf.clone(), "roic", 5, true).expect(
+    let _ranked_lf = top_companies_by_factor(filtered_lf.clone(), "roic", 5, true).expect(
         "Unsupported
     financial factor",
     );
-    let ranked2_lf = top_companies_by_factor(filtered_lf, "yoy_revenue_growth", 5, true).expect(
-        "Unsupported \
-    financial factor",
-    );
-    let df = match ranked_lf.collect() {
-        Ok(df) => df,
-        Err(e) => {
-            eprintln!("Unable to calculate factors : {e}");
-            return;
-        }
-    };
-    let df2 = match ranked2_lf.collect() {
+    let comparison_lf = compare_companies(filtered_lf, vec!["AAPL", "XOM"]);
+    let df = match comparison_lf.collect() {
         Ok(df) => df,
         Err(e) => {
             eprintln!("Unable to calculate factors : {e}");
@@ -63,5 +55,4 @@ fn main() {
     };
 
     println!("{}", df);
-    println!("{}", df2);
 }

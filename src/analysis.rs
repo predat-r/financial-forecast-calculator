@@ -1,5 +1,7 @@
 use polars::error::PolarsResult;
-use polars::prelude::{IdxSize, LazyFrame, PolarsError, SortMultipleOptions, col};
+use polars::prelude::{
+    IdxSize, LazyFrame, NamedFrom, PolarsError, Series, SortMultipleOptions, col, lit,
+};
 
 // TODO
 // Compare multiple companies
@@ -32,4 +34,10 @@ pub fn top_companies_by_factor(
             "Unsupported financial factor".into(),
         ))
     }
+}
+
+pub fn compare_companies(lf: LazyFrame, tickers: Vec<&str>) -> LazyFrame {
+    let ticker_series = Series::new("tickers".into(), tickers);
+
+    lf.filter(col("ticker").is_in(lit(ticker_series), false))
 }
