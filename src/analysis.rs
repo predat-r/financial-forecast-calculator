@@ -41,3 +41,22 @@ pub fn compare_companies(lf: LazyFrame, tickers: Vec<&str>) -> LazyFrame {
 
     lf.filter(col("ticker").is_in(lit(ticker_series), false))
 }
+
+pub fn factor_history(lf: LazyFrame, ticker: &str, factor: &str) -> PolarsResult<LazyFrame> {
+    if matches!(
+        factor,
+        "roe" | "roic" | "yoy_revenue_growth" | "debt_to_equity" | "operating_margin"
+    ) {
+        Ok(lf
+            .filter(col("ticker").eq(lit(ticker)))
+            .select([col("ticker"), col("calendardate"), col(factor)])
+            .sort(
+                vec!["calendardate"],
+                SortMultipleOptions::default().with_order_descending(false),
+            ))
+    } else {
+        Err(PolarsError::InvalidOperation(
+            "Unsupported financial factor".into(),
+        ))
+    }
+}
