@@ -1,6 +1,7 @@
 use financial_factor_calculator::analysis::{
     compare_companies, factor_history, figures_for_year, top_companies_by_factor,
 };
+use financial_factor_calculator::export::export_to_csv;
 use financial_factor_calculator::factors::{
     debt_to_equity, operating_margin, roe, roic, yoy_revenue_growth,
 };
@@ -66,7 +67,16 @@ fn main() -> PolarsResult<()> {
         }
     };
 
-    println!("{}", result.collect()?);
+    let df = result.collect()?;
+    println!("{df}");
+
+    if ask("Export result to CSV? (y/n): ").eq_ignore_ascii_case("y") {
+        let filename = ask("Enter output filename (e.g. results.csv): ");
+
+        export_to_csv(df, filename.into())?;
+
+        println!("CSV exported successfully.");
+    }
 
     Ok(())
 }
