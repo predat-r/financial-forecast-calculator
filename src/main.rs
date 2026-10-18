@@ -1,22 +1,31 @@
+use crate::factors::roe;
 use financial_factor_calculator::reader::read_from_csv;
-use polars::prelude::PlRefPath;
+use polars::error::PolarsResult;
+use polars::prelude::{PlRefPath, col};
 
 mod analysis;
 mod factors;
 
 fn main() {
-    match read_from_csv(PlRefPath::from("data/sharadar_sf1.csv")) {
-        Ok(lf) => match lf.collect() {
-            Ok(df) => {
-                println!("{}", df)
-            }
-            Err(e) => {
-                println!("{}", e)
-            }
-        },
+    let lf = match read_from_csv(PlRefPath::from("data/sharadar_sf1.csv")) {
+        Ok(lf) => lf,
         Err(e) => {
-            println!("{}", e)
+            eprintln!("Failed to read CSV: {}", e);
+            return;
         }
-    }
+    };
+    let df = roe(lf)
+        .select([
+            col("ticker"),
+            col("calendardate"),
+            col("netinc"),
+            col("equity"),
+            col("roe"),
+        ])
+        .collect()
+        .expect("Failed to calculate ROE");
+
+    println!("{}", df);
+
     println!("Hello, world!");
 }
