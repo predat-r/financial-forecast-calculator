@@ -1,7 +1,7 @@
 use polars::prelude::{
     DataType, LazyFrame, NULL, PolarsResult, SortMultipleOptions, StrptimeOptions, col, lit, when,
 };
-use std::ops::Mul;
+use std::ops::{Mul, Sub};
 
 pub fn roe(lf: LazyFrame) -> LazyFrame {
     lf.with_columns([
@@ -68,4 +68,24 @@ pub fn yoy_revenue_growth(lf: LazyFrame) -> PolarsResult<LazyFrame> {
         )
         .alias("yoy_revenue_growth")]);
     Ok(result)
+}
+
+pub fn roic(lf: LazyFrame) -> LazyFrame {
+    lf.with_column(
+        when(col("ebt").is_null().or(col("ebt").lt_eq(lit(0))))
+            .then(lit(NULL))
+            .otherwise(col("taxexp") / col("ebt").cast(DataType::Float64))
+            .alias("effective_tax_rate"),
+    )
+    .with_columns([col("opinc")
+        .mul(lit(1).sub(col("effective_tax_rate")))
+        .alias("nopat")])
+    .with_columns([when(
+        col("invcapavg")
+            .is_null()
+            .or(col("invcapavg").lt_eq(lit(0))),
+    )
+    .then(lit(NULL))
+    .otherwise(col("nopat") / col("invcapavg").cast(DataType::Float64) * lit(100))
+    .alias("roic")])
 }
