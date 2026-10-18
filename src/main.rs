@@ -1,3 +1,4 @@
+use financial_factor_calculator::analysis::{figures_for_year, top_companies_by_roic};
 use financial_factor_calculator::factors::{
     debt_to_equity, operating_margin, roe, roic, yoy_revenue_growth,
 };
@@ -22,24 +23,25 @@ fn main() {
             return;
         }
     };
-    let df = match roic(yoy_revenue_growth_lf)
-        .select([
-            col("ticker"),
-            col("calendardate"),
-            col("debt"),
-            col("equity"),
-            col("revenue"),
-            col("netinc"),
-            col("roe"),
-            col("operating_margin"),
-            col("debt_to_equity"),
-            col("yoy_revenue_growth"),
-            col("invcapavg"),
-            col("roic"),
-            col("nopat"),
-        ])
-        .collect()
-    {
+    let lf = roic(yoy_revenue_growth_lf).select([
+        col("ticker"),
+        col("calendardate"),
+        col("debt"),
+        col("equity"),
+        col("revenue"),
+        col("netinc"),
+        col("roe"),
+        col("operating_margin"),
+        col("debt_to_equity"),
+        col("yoy_revenue_growth"),
+        col("invcapavg"),
+        col("roic"),
+        col("nopat"),
+    ]);
+    let filtered_lf = figures_for_year(lf, 2023);
+    let ranked_lf = top_companies_by_roic(filtered_lf, 5);
+
+    let df = match ranked_lf.collect() {
         Ok(df) => df,
         Err(e) => {
             eprintln!("Unable to calculate factors : {e}");
