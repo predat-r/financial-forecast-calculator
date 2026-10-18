@@ -1,5 +1,5 @@
 use polars::prelude::{
-    DataType, LazyFrame, NULL, PolarsResult, SortMultipleOptions, col, lit, when,
+    DataType, LazyFrame, NULL, PolarsResult, SortMultipleOptions, StrptimeOptions, col, lit, when,
 };
 use std::ops::Mul;
 
@@ -36,15 +36,29 @@ pub fn yoy_revenue_growth(lf: LazyFrame) -> PolarsResult<LazyFrame> {
             SortMultipleOptions::default().with_order_descending(false),
         )
         .with_column(
+            col("calendardate")
+                .str()
+                .to_date(StrptimeOptions::default())
+                .alias("calendardate"),
+        )
+        .with_columns([
+            col("calendardate")
+                .shift(lit(1))
+                .over([col("ticker")])?
+                .alias("previous_year_date"),
             col("revenue")
                 .shift(lit(1))
                 .over([col("ticker")])?
                 .alias("previous_year_revenue"),
-        )
+        ])
         .with_columns([when(
             col("previous_year_revenue")
                 .is_null()
-                .or(col("previous_year_revenue").lt_eq(lit(0))),
+                .or(col("previous_year_revenue").lt_eq(lit(0)))
+                .or(
+                    (col("calendardate").dt().year() - col("previous_year_date").dt().year())
+                        .neq(lit(1)),
+                ),
         )
         .then(lit(NULL))
         .otherwise(

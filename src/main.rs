@@ -2,7 +2,6 @@ use financial_factor_calculator::factors::{
     debt_to_equity, operating_margin, roe, yoy_revenue_growth,
 };
 use financial_factor_calculator::reader::read_from_csv;
-use polars::error::PolarsResult;
 use polars::prelude::{PlRefPath, col};
 
 fn main() {
@@ -26,7 +25,7 @@ fn main() {
         col("operating_margin"),
         col("debt_to_equity"),
     ]);
-    let df = match debt_to_equity_lf.collect() {
+    let _df = match debt_to_equity_lf.collect() {
         Ok(df) => df,
         Err(e) => {
             eprintln!("Unable to calculate factors : {e}");
