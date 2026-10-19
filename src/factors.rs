@@ -3,6 +3,9 @@ use polars::prelude::{
 };
 use std::ops::{Mul, Sub};
 
+/// Adds return on equity (`roe`) as net income divided by equity, in percent.
+///
+/// Rows with null or non-positive equity receive a null factor value.
 pub fn roe(lf: LazyFrame) -> LazyFrame {
     lf.with_columns([
         when(col("equity").is_null().or(col("equity").lt_eq(lit(0))))
@@ -12,6 +15,10 @@ pub fn roe(lf: LazyFrame) -> LazyFrame {
     ])
 }
 
+/// Adds operating margin (`operating_margin`) as operating income divided by
+/// revenue, in percent.
+///
+/// Rows with null or non-positive revenue receive a null factor value.
 pub fn operating_margin(lf: LazyFrame) -> LazyFrame {
     lf.with_columns([
         when(col("revenue").is_null().or(col("revenue").lt_eq(lit(0))))
@@ -20,6 +27,9 @@ pub fn operating_margin(lf: LazyFrame) -> LazyFrame {
             .alias("operating_margin"),
     ])
 }
+/// Adds debt-to-equity (`debt_to_equity`) as debt divided by equity.
+///
+/// Rows with null or non-positive equity receive a null factor value.
 pub fn debt_to_equity(lf: LazyFrame) -> LazyFrame {
     lf.with_columns([
         when(col("equity").is_null().or(col("equity").lt_eq(lit(0))))
@@ -29,6 +39,11 @@ pub fn debt_to_equity(lf: LazyFrame) -> LazyFrame {
     ])
 }
 
+/// Adds year-over-year revenue growth (`yoy_revenue_growth`), in percent.
+///
+/// Records are ordered by ticker and calendar date. Growth is only calculated
+/// when the preceding record for that ticker is exactly one calendar year
+/// earlier and its revenue is positive; otherwise the value is null.
 pub fn yoy_revenue_growth(lf: LazyFrame) -> PolarsResult<LazyFrame> {
     let result = lf
         .sort(
@@ -70,6 +85,11 @@ pub fn yoy_revenue_growth(lf: LazyFrame) -> PolarsResult<LazyFrame> {
     Ok(result)
 }
 
+/// Adds return on invested capital (`roic`), in percent, along with the
+/// intermediate `effective_tax_rate` and `nopat` columns.
+///
+/// The effective tax rate is tax expense divided by positive earnings before
+/// tax. ROIC is null when average invested capital is null or non-positive.
 pub fn roic(lf: LazyFrame) -> LazyFrame {
     lf.with_column(
         when(col("ebt").is_null().or(col("ebt").lt_eq(lit(0))))

@@ -9,6 +9,7 @@ use financial_factor_calculator::reader::read_from_csv;
 use polars::prelude::{LazyFrame, PlRefPath, PolarsResult};
 use std::io::{self, Write};
 
+/// Available actions in the interactive analysis menu.
 enum MenuActions {
     RankCompaniesByFactor,
     CompareCompanies,
@@ -17,6 +18,7 @@ enum MenuActions {
     InvalidInput,
 }
 
+/// Loads the financial data, computes factors, and runs the selected analysis.
 fn main() -> PolarsResult<()> {
     let lf = read_from_csv(PlRefPath::from("data/sharadar_sf1.csv"))?;
     let lf = calculate_factors(lf)?;
@@ -81,6 +83,7 @@ fn main() -> PolarsResult<()> {
     Ok(())
 }
 
+/// Adds every supported financial factor to the lazy input frame.
 fn calculate_factors(lf: LazyFrame) -> PolarsResult<LazyFrame> {
     let lf = roe(lf);
     let lf = operating_margin(lf);
@@ -89,6 +92,7 @@ fn calculate_factors(lf: LazyFrame) -> PolarsResult<LazyFrame> {
     Ok(roic(lf))
 }
 
+/// Converts the user's menu choice into an analysis action.
 fn get_user_selection() -> MenuActions {
     match ask("Choose an analysis: ").as_str() {
         "1" => MenuActions::RankCompaniesByFactor,
@@ -99,6 +103,7 @@ fn get_user_selection() -> MenuActions {
     }
 }
 
+/// Displays a prompt and returns the trimmed line entered by the user.
 fn ask(prompt: &str) -> String {
     print!("{prompt}");
     io::stdout().flush().unwrap();

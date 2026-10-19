@@ -3,10 +3,15 @@ use polars::prelude::{
     IdxSize, LazyFrame, NamedFrom, PolarsError, Series, SortMultipleOptions, col, lit,
 };
 
+/// Filters records to those whose calendar date falls in `year`.
 pub fn figures_for_year(lf: LazyFrame, year: i32) -> LazyFrame {
     lf.filter(col("calendardate").dt().year().eq(year))
 }
 
+/// Returns up to `limit` companies ordered by a supported financial factor.
+///
+/// Null factor values are excluded. Set `desc` to `true` for descending order;
+/// unsupported factor names return a Polars invalid-operation error.
 pub fn top_companies_by_factor(
     lf: LazyFrame,
     factor: &str,
@@ -31,12 +36,17 @@ pub fn top_companies_by_factor(
     }
 }
 
+/// Filters records to the requested company tickers.
 pub fn compare_companies(lf: LazyFrame, tickers: Vec<&str>) -> LazyFrame {
     let ticker_series = Series::new("tickers".into(), tickers);
 
     lf.filter(col("ticker").is_in(lit(ticker_series), false))
 }
 
+/// Returns the selected factor over time for one ticker, ordered by date.
+///
+/// Only supported financial factors are accepted; other names return a Polars
+/// invalid-operation error.
 pub fn factor_history(lf: LazyFrame, ticker: &str, factor: &str) -> PolarsResult<LazyFrame> {
     if matches!(
         factor,
