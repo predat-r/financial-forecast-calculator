@@ -3,11 +3,6 @@ use polars::prelude::{
     IdxSize, LazyFrame, NamedFrom, PolarsError, Series, SortMultipleOptions, col, lit,
 };
 
-// TODO
-// Compare multiple companies
-// Historical analysis
-// CSV Export
-
 pub fn figures_for_year(lf: LazyFrame, year: i32) -> LazyFrame {
     lf.filter(col("calendardate").dt().year().eq(year))
 }
